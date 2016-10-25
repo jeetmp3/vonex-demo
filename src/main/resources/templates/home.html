@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Vonex</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"/>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <h3>Vonex Rest API client</h3>
+        <p><code>Click Start to invoke initiate-request and start the process</code></p>
+        <br />
+    </div>
+    <div class="row">
+        <button class="btn btn-primary btn-lg col-md-2" data-toggle="modal" data-target="#initiate-request-modal" id="start-button">
+            <i class="glyphicon glyphicon-play"></i> Start
+        </button>
+    </div>
+    <div class="row" style="margin-top: 10px;margin-bottom: 10px;">
+        <button class="btn btn-primary btn-lg col-md-2" style="display: none;" data-toggle="modal" data-target="#ask-modal" id="ask-button">
+            <i class="glyphicon glyphicon-play"></i> Retry
+        </button>
+    </div>
+    <div class="row">
+        <div id="message" hidden="hidden" class="alert alert-success"></div>
+        <div id="error-message" hidden="hidden" class="alert alert-danger"></div>
+    </div>
+</div>
+
+
+<!-- Static Modal -->
+<div class="modal modal-static fade" id="initiate-request-modal" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" style="float: right;" data-dismiss="modal" aria-hidden="true">
+                    <i class="glyphicon glyphicon-remove"></i>
+                </button>
+                <div class="text-center" style="clear: both;">
+                    <img src="http://www.travislayne.com/images/loading.gif" class="icon" />
+                    <h4>Getting token...</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Static Modal -->
+<div class="modal modal-static fade" id="ask-modal" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" style="float: right;" data-dismiss="modal" aria-hidden="true">
+                    <i class="glyphicon glyphicon-remove"></i>
+                </button>
+                <div class="text-center" style="clear: both;">
+                    <img src="http://www.travislayne.com/images/loading.gif" class="icon" />
+                    <h4>Talking to ask endpoint...</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="" th:src="@{/js/app.js}"></script>
+<script th:inline="javascript">
+    jQuery(document).ready(function(){
+        var token = '';
+        var retrying = false;
+        jQuery("#start-button").on("click", function(){
+            jQuery("#error-message").hide();
+            jQuery("#message").hide();
+           makeCall(/*[[@{/initiate}]]*/'',{}, function(data){
+               if(data != '') {
+                   token = data;
+                   jQuery("#initiate-request-modal").modal('toggle');
+                   jQuery("#start-button").prop('disabled', true);
+                   jQuery("#ask-button").trigger('click');
+               } else {
+                   jQuery("#error-message").show().html("No token fetched. Click start to retry");
+                   jQuery("#initiate-request-modal").modal('toggle');
+               }
+           })
+        });
+
+        jQuery("#ask-button").on("click", function(){
+            retrying = true;
+            makeAskCall();
+        });
+
+        function makeAskCall() {
+            if(token != '') {
+                makeCall(/*[[@{/ask}]]*/'',{token: token}, function(data){
+                    jQuery("#ask-button").css('display', 'none');
+                    jQuery("#error-message").hide();
+                    token = '';
+                    fetchAnswer(data);
+                }, function (error) {
+                    retrying = false;
+                    jQuery("#ask-modal").modal('toggle');
+                    jQuery("#error-message").show().html("Failed after 10 attempts. Retrying in 3 seconds or Click Retry");
+                    jQuery("#ask-button").show();
+                    setTimeout(retry, 3000);
+                })
+            }
+        }
+
+        function retry() {
+            if(retrying != true) {
+                jQuery("#error-message").hide();
+                jQuery("#ask-button").trigger('click');
+            }
+        }
+
+        function fetchAnswer(token) {
+            makeCall(/*[[@{/answer}]]*/'',{token: token}, function(data){
+                jQuery("#message").show().text(data);
+                jQuery("#start-button").prop('disabled', false);
+                jQuery("#ask-modal").modal('toggle');
+            })
+        }
+    });
+</script>
+</body>
+</html>
