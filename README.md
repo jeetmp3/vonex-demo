@@ -2,6 +2,10 @@
 
 This is a code sample works as a Rest client to Vonex APIs.
 
+##Prerequisites
+Java 7+
+Gradle 2.12+
+
 ## How to run the app
 Just run below command
 * `./gradlew bootRun`
