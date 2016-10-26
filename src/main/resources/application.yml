@@ -11,3 +11,6 @@ logging:
       springframework:
         web:
           client: info
+      apache:
+        http:
+          wire: debug

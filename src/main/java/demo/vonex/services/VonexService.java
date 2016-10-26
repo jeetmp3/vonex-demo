@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.annotation.PostConstruct;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
@@ -31,6 +32,11 @@ public class VonexService {
 
     public RequestToken initiateRequest() {
         return restTemplate.getForObject(buildURI("api/initial-request"), RequestToken.class);
+    }
+
+    @PostConstruct
+    public void init() {
+        System.setProperty("https.protocols", "TLSv1.2,TLSv1.1,TLSv1");
     }
 
     public AskResponse ask(String token) {
