@@ -34,11 +34,6 @@ public class VonexService {
         return restTemplate.getForObject(buildURI("api/initial-request"), RequestToken.class);
     }
 
-    @PostConstruct
-    public void init() {
-        System.setProperty("https.protocols", "TLSv1.2,TLSv1.1,TLSv1");
-    }
-
     public AskResponse ask(String token) {
         byte index = 1;
         AskResponse response = restTemplate.getForObject(buildURI("api/ask", "request", token), AskResponse.class);
